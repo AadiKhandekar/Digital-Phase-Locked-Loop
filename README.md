@@ -127,7 +127,6 @@ This allows the PLL to track slow frequency variations of the input clock.
 
 ## Tools Used
 
-- Verilog HDL
 - Xilinx Vivado
 - GitHub
 
