@@ -14,7 +14,6 @@ The implementation demonstrates how a digital feedback loop synchronizes an inte
 - Optional frequency tracking
 - Glitch-free phase correction
 - Parameterizable phase accumulator width
-- Behavioral simulation in Vivado
 
 ---
 
@@ -118,9 +117,7 @@ This allows the PLL to track slow frequency variations of the input clock.
 ## Future Improvements
 
 - Add a proportional-integral (PI) digital loop filter
-- Implement a sine-wave NCO using LUT/CORDIC
-- Add a Phase-Frequency Detector (PFD)
-- Support programmable output frequencies
+- Implement a sine-wave NCO using Look-Up-Tables(LUTs)
 - FPGA implementation and hardware validation
 
 ---
