@@ -2,21 +2,13 @@
 //
 // Digital Phase-Locked Loop (DPLL)
 //
-// Author      : Aadi Khandekar
+// 
 //
 // Description:
 //
-// Educational implementation of a Digital Phase-Locked Loop
+// Implementation of a Digital Phase-Locked Loop (DPLL)
 // using a phase accumulator based Numerically Controlled
 // Oscillator (NCO).
-//
-// Features
-// --------
-// • Square-wave NCO
-// • Digital phase detector
-// • Configurable loop gain
-// • Optional frequency tracking
-// • Glitch-free phase correction
 //
 //=============================================================
 
