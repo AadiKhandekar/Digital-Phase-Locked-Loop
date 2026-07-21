@@ -12,11 +12,11 @@
 //
 // Features
 // --------
-// • Square-wave NCO
-// • Digital phase detector
-// • Configurable loop gain
-// • Optional frequency tracking
-// • Glitch-free phase correction
+// â€¢ Square-wave NCO
+// â€¢ Digital phase detector
+// â€¢ Configurable loop gain
+// â€¢ Optional frequency tracking
+// â€¢ Glitch-free phase correction
 //
 //=============================================================
 
@@ -38,8 +38,8 @@ module	DPLL #(
 		input	wire	[(MSB-1):0]	i_step,
 		//
 		input	wire			i_ce,
-		input	wire			i_input,	// Incoming clk
-		input	wire	[4:0]		i_lgcoeff,	// LgGain coeff
+		input	wire			i_input,	// Input clock
+	input	wire	[4:0]		i_lgcoeff,	// Logarithm of the gain coeffecient
 		output	wire	[PHASE_BITS-1:0] o_phase,
 		output	reg	[1:0]		o_err
 	);
@@ -51,11 +51,8 @@ module	DPLL #(
 	reg	[MSB:0]	ctr, phase_correction, freq_correction, r_step;
 
 
-	// agreed_output -- when =1, i.e., when both clocks are aligned.
+	// agreed_output -->  = 1 when both clocks are aligned.
 	
-	// Any time the input and our counter agree, let's keep track of that
-	// bit.  We'll need it in a moment in order to know which signal
-	// changed first.
 	initial	agreed_output = 0;
 	always @(posedge i_clk)
 	if (i_ce)
@@ -69,8 +66,6 @@ module	DPLL #(
 
 	// lead --. tells if PLL/generated clock is ahead if lead = 1; behind if lead = 0
 
-	// Lead is true if the counter changes before the input
-	// changes, false otherwise
 	always @(*)
 	if (agreed_output)
 		// We were last high.  Lead is true now
@@ -84,12 +79,9 @@ module	DPLL #(
 
 	// phase_err
 	// Any disagreement between the high order counter bit and the input
-	// is a phase error that we will need to correct
 	assign	phase_err = (ctr[MSB] != i_input);
 
 	// phase_correction
-	// How much we correct our phase by is a function of our loop
-	// coefficient, here represented by 2^{-i_lgcoeff}.
 	initial	phase_correction = 0;
 	always @(posedge i_clk)
 		phase_correction <= {1'b1,{(MSB){1'b0}}} >> i_lgcoeff;
@@ -100,47 +92,28 @@ module	DPLL #(
 	always @(posedge i_clk)
 	if (i_ce)
 	begin
-		// If we match, then just step the counter forward
-		// by one delta phase amount
 		if (!phase_err)
 			ctr <= ctr + r_step;
 
-		// Otherwise we don't match.  We need to adjust our
-		// counter based upon how far off we are.
-		// If the counter is ahead of the input, then we should
-		// slow it down a touch.
+		// Otherwise we don't match.  We need to adjust our counter based upon how far off we are.
 		else if (lead)
 		begin
-			// This check is necessary to keep us glitch-free
-			// If the step is less than the phase correction, the
-			// recovered clock might appear to go backwards.
 			if (!OPT_GLITCHLESS || r_step > phase_correction)
 				ctr <= ctr + r_step - phase_correction;
 		end
-
-		// Likewise, if the counter is falling behind the input,
-		// then we need to speed it up.
 		else // if (lag)
 			ctr <= ctr + r_step + phase_correction;
 	end
 
 	// o_phase (== ctr)
-	// Incidentally, we'll also output this internal phase in case you wish
-	// to use it for synchronizing anything with this clock.
 	assign	o_phase = ctr;
 
 	// freq_correction
-	// The frequency correction needs to be the phase_correction squared
-	// divided by four in order to get a critically damped loop
 	initial	freq_correction = 0;
 	always @(posedge i_clk)
 		freq_correction <= { 3'b001, {(MSB-2){1'b0}} } >> (2*i_lgcoeff);
 
 	// r_step -- frequency tracking
-	// On the clock, we'll apply this frequency correction, either slowing
-	// down or speeding up the frequency, any time there is a phase error.
-	// The exceptions are if 1) we aren't tracking frequency, or 2) the
-	// user wants to load in what frequency to use.
 	initial	r_step = INITIAL_PHASE_STEP;
 	always @(posedge i_clk)
 	if (i_ld)
@@ -155,19 +128,10 @@ module	DPLL #(
 	// }}}
 
 	// o_err
-	// Output an error signal as follows:
-	// 1. If the two signals match, both one or both zeros, then there is
-	//	no phase error.
-	// 2. If there is a mismatch and ...
-	//	A. Our counter leads our input, then our error is -1, else if
-	//	B. Our input leads our counter (!lead), then our error signal
-	//		is a +1.
-	// All three of these numbers, -1, 0, and 1, all fit within two bits,
-	// so that's what we'll use here..
+	// Output an error signal 
 	initial	o_err = 2'h0;
 	always @(posedge i_clk)
 	if (i_ce)
 		o_err <= (!phase_err) ? 2'b00 : ((lead) ? 2'b11 : 2'b01);
-
 
 endmodule
